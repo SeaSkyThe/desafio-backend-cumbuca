@@ -9,57 +9,55 @@ defmodule Cli do
   """
 
   def start() do
+    db = Kvdb.new()
     IO.puts("\nWelcome to Cumbuca KEY-VALUE Store!\n")
     IO.puts("Type 'help' to see the list of available commands.")
-    loop()
+    loop(db)
   end
 
-  def loop() do
+  def loop(db) do
     input =
       IO.gets("Cumbuca-CLI > ")
       |> String.trim()
 
     if input != "" do
-      process_input(input)
+      new_db = process_input(input, db)
+      loop(new_db)
+    else
+      loop(db)
     end
-
-    loop()
   end
 
-  def process_input(input) do
-    IO.puts("Processando Input: #{input}")
-
+  def process_input(input, db) do
     {cmd, args} = parse_command_and_args(input)
-
-    IO.puts("Comando: #{cmd}")
-    IO.puts("Args: ")
-    Enum.map(args, fn x -> IO.puts(x) end)
 
     case cmd do
       "HELP" ->
         Cli.Cmds.help()
+        db
 
       "SET" ->
-        Cli.Cmds.set(args)
+        handle_command_result(Cli.Cmds.set(db, args), db)
 
       "GET" ->
-        Cli.Cmds.get(args)
+        handle_command_result(Cli.Cmds.get(db, args), db)
 
       "BEGIN" ->
-        Cli.Cmds.begin(args)
+        handle_command_result(Cli.Cmds.begin(db, args), db)
 
       "ROLLBACK" ->
-        Cli.Cmds.rollback(args)
+        handle_command_result(Cli.Cmds.rollback(db, args), db)
 
       "COMMIT" ->
-        Cli.Cmds.commit(args)
+        handle_command_result(Cli.Cmds.commit(db, args), db)
 
       "EXIT" ->
+        # Maybe we should save the db state here? 
         System.halt(0)
 
       _ ->
         IO.puts("ERR \"No command \'#{cmd}\'\"")
-        :unknown_command
+        db
     end
   end
 
@@ -76,22 +74,32 @@ defmodule Cli do
 
     cmd = String.trim(cmd, "'") |> String.upcase()
 
-    parsed_args = Enum.map(
-      args,
-      fn arg ->
-        case String.upcase(arg) do
-          "TRUE" -> true
-          "FALSE" -> false
-          "NIL" -> nil
-          _ -> 
-            case Integer.parse(arg) do
-              {int_value, _} -> int_value
+    parsed_args =
+      Enum.map(
+        args,
+        fn arg ->
+          case String.upcase(arg) do
+            "TRUE" ->
+              true
+
+            "FALSE" ->
+              false
+
+            "NIL" ->
+              nil
+
+            _ ->
+              case Integer.parse(arg) do
+                {int_value, _} -> int_value
                 _ -> String.trim(arg, "'")
-            end
+              end
+          end
         end
-      end
-    )
+      )
 
     {cmd, parsed_args}
   end
+
+  defp handle_command_result(:syntax_error, db), do: db
+  defp handle_command_result(new_db, _db), do: new_db
 end

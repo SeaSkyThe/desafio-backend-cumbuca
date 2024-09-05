@@ -6,7 +6,7 @@ build:
 run:
 	./desafio_cli
 
-testing:
+tests:
 	mix test
 
 clean:

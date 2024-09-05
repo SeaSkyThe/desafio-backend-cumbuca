@@ -17,115 +17,52 @@ defmodule Cli.Cmds do
     IO.puts("  COMMIT - Aplica as alterações da transação atual")
   end
 
-  @doc """
-  Função que define o comportamento do comando SET.
-
-  Define o valor de uma chave, caso ela já exista, sobreescreve o valor.
-
-  Parâmetros:
-    - `args`: Lista de strings contendo os argumentos passados na linha de comando. 
-            Onde o primeiro argumento é a chave e o segundo é o valor a ser associado com essa chave.
-  Retorno: 
-    - `{existe :: boolean, valor :: T}`: 
-      - `existe`: Se a chave existe ou não.
-        - `true`: Se a chave existe e foi sobreescrita.
-        - `false`: Se a chave não existe.
-      - `valor`: O valor associado com a chave. Onde `T` é o tipo do valor armazenado.
-  """
-  def set([key, value]) when is_binary(key) do
-    raise "Not implemented yet"
+  def set(db, [key, value]) when is_binary(key) do
+    {exists, value, new_db} = Kvdb.set(db, key, value)
+    IO.puts("#{if exists, do: "TRUE", else: "FALSE"} #{value}")
+    new_db
   end
 
-  def set(_) do
+  def set(_db, _) do
     print_error("SET <chave> <valor> - Syntax error")
+
     :syntax_error
   end
 
-  @doc """
-  Função que define o comportamento do comando GET.
-
-  Recupera o valor de uma chave. 
-  Caso a chave não exista, retorna `NIL`.
-
-  Parâmetros:
-    - `args`: Lista de strings contendo os argumentos passados na linha de comando. 
-            Onde o primeiro, e único, argumento é a chave cujo valor será recuperado.
-  Retorno: 
-    - `{valor :: T}`: 
-      - `valor`: O valor associado com a chave. Onde `T` é o tipo do valor armazenado.
-  """
-  def get([key]) when is_binary(key) do
-    raise "Not implemented yet"
+  def get(db, [key]) when is_binary(key) do
+    {value, new_db} = Kvdb.get(db, key)
+    IO.puts("#{if value == nil, do: "NIL", else: value}")
+    new_db
   end
 
-  def get(_) do
+  def get(_db, _) do
     print_error("GET <chave> - Syntax error")
     :syntax_error
   end
 
-  @doc """
-  Função que define o comportamento do comando BEGIN.
-
-  Inicia uma transação.
-
-  Parâmetros:
-    - Não recebe parâmetros.
-
-  Retorno: 
-    - `nivel_de_transacao :: integer`: 
-      - `nivel_de_transacao`: O nível de transação atual (i.e. quantas transações abertas existem).
-  """
-  def begin([]) do
+  def begin(db, []) do
     raise "Not implemented yet"
   end
 
-  def begin(_) do
+  def begin(_db, _) do
     print_error("BEGIN does not accept arguments - Syntax error")
     :syntax_error
   end
 
-  @doc """
-  Função que define o comportamento do comando ROLLBACK.
-
-  Finaliza uma transação sem aplicar suas alterações.
-  Isto é, todas as alterações feitas dentro da transação são descartadas.
-
-  Parâmetros:
-    - Não recebe parâmetros.
-
-  Retorno: 
-    - `nivel_de_transacao :: integer`: 
-      - `nivel_de_transacao`: O nível de transação após o rollback.
-  """
-  def rollback([]) do
+  def rollback(db, []) do
     raise "Not implemented yet"
   end
 
-  def rollback(_) do
+  def rollback(_db, _) do
     print_error("ROLLBACK does not accept arguments - Syntax error")
     :syntax_error
   end
 
-  @doc """
-  Função que define o comportamento do comando COMMIT.
-
-  Finaliza a transação atual aplicando todas as suas alterações.
-  Isto é, todas as alterações feitas dentro da transação são aplicadas na transação superior.
-  Caso após o commit não houver mais transações abertas, o resultado das transacoes, 
-  deven ser efetivados no banco.
-
-  Parâmetros:
-    - Não recebe parâmetros.
-
-  Retorno: 
-    - `nivel_de_transacao :: integer`: 
-      - `nivel_de_transacao`: O nível de transação após o commit.
-  """
-  def commit([]) do
+  def commit(db, []) do
     raise "Not implemented yet"
   end
 
-  def commit(_) do
+  def commit(_db, _) do
     print_error("COMMIT does not accept arguments - Syntax error")
     :syntax_error
   end
