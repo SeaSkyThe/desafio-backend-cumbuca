@@ -32,8 +32,13 @@ defmodule Cli.Cmds do
         - `false`: Se a chave não existe.
       - `valor`: O valor associado com a chave. Onde `T` é o tipo do valor armazenado.
   """
-  def set(args) do
+  def set([key, value]) when is_binary(key) do
     raise "Not implemented yet"
+  end
+
+  def set(_) do
+    print_error("SET <chave> <valor> - Syntax error")
+    :syntax_error
   end
 
   @doc """
@@ -49,8 +54,13 @@ defmodule Cli.Cmds do
     - `{valor :: T}`: 
       - `valor`: O valor associado com a chave. Onde `T` é o tipo do valor armazenado.
   """
-  def get(args) do
+  def get([key]) when is_binary(key) do
     raise "Not implemented yet"
+  end
+
+  def get(_) do
+    print_error("GET <chave> - Syntax error")
+    :syntax_error
   end
 
   @doc """
@@ -65,8 +75,13 @@ defmodule Cli.Cmds do
     - `nivel_de_transacao :: integer`: 
       - `nivel_de_transacao`: O nível de transação atual (i.e. quantas transações abertas existem).
   """
-  def begin() do
+  def begin([]) do
     raise "Not implemented yet"
+  end
+
+  def begin(_) do
+    print_error("BEGIN does not accept arguments - Syntax error")
+    :syntax_error
   end
 
   @doc """
@@ -82,8 +97,13 @@ defmodule Cli.Cmds do
     - `nivel_de_transacao :: integer`: 
       - `nivel_de_transacao`: O nível de transação após o rollback.
   """
-  def rollback() do
+  def rollback([]) do
     raise "Not implemented yet"
+  end
+
+  def rollback(_) do
+    print_error("ROLLBACK does not accept arguments - Syntax error")
+    :syntax_error
   end
 
   @doc """
@@ -101,8 +121,13 @@ defmodule Cli.Cmds do
     - `nivel_de_transacao :: integer`: 
       - `nivel_de_transacao`: O nível de transação após o commit.
   """
-  def commit() do
+  def commit([]) do
     raise "Not implemented yet"
+  end
+
+  def commit(_) do
+    print_error("COMMIT does not accept arguments - Syntax error")
+    :syntax_error
   end
 
   @doc """
