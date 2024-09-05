@@ -12,11 +12,12 @@ defmodule Kvdb do
   end
 
   def get_top_transaction(db) do
-    List.last(db.transactions)
+    [last | _] = db.transactions
+    last
   end
 
   def transaction_level(db) do
-    length(db.transactions)
+    length(db.transactions) - 1
   end
 
   def update_top_transaction(db, new_transaction) do
@@ -24,7 +25,7 @@ defmodule Kvdb do
     # It would be the same as: %Kvdb{transactions: [new_transaction | old_transactions]} 
     case db.transactions do
       [_ | old_transactions] ->
-        %{db | transactions: [new_transaction | old_transactions]} 
+        %{db | transactions: [new_transaction | old_transactions]}
 
       _ ->
         %{db | transactions: [new_transaction]}
@@ -88,9 +89,9 @@ defmodule Kvdb do
     - `nivel_de_transacao :: integer`: 
       - `nivel_de_transacao`: O nível de transação atual (i.e. quantas transações abertas existem).
   """
-
   def begin(db) do
-    raise "Not implemented yet"
+    new_db = %Kvdb{transactions: [%{} | db.transactions]}
+    {transaction_level(new_db), new_db}
   end
 
   @doc """
@@ -106,7 +107,6 @@ defmodule Kvdb do
     - `nivel_de_transacao :: integer`: 
       - `nivel_de_transacao`: O nível de transação após o rollback.
   """
-
   def rollback(db) do
     raise "Not implemented yet"
   end

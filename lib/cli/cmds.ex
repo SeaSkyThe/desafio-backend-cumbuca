@@ -41,7 +41,9 @@ defmodule Cli.Cmds do
   end
 
   def begin(db, []) do
-    raise "Not implemented yet"
+    {transaction_level, new_db} = Kvdb.begin(db)
+    IO.puts("#{transaction_level}")
+    new_db
   end
 
   def begin(_db, _) do

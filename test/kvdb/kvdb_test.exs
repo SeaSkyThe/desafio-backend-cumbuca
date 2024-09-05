@@ -34,4 +34,24 @@ defmodule KvdbTest do
     assert value == "value"
     assert new_db == temp_db
   end
+
+  test "BEGIN command", %{db: db} do
+    assert Kvdb.transaction_level(db) == 0
+
+    {transaction_level, new_db} = Kvdb.begin(db)
+    assert transaction_level == 1
+    assert length(new_db.transactions) == 2
+
+    {transaction_level, new_db2} = Kvdb.begin(new_db)
+    assert transaction_level == 2
+    assert length(new_db2.transactions) == 3
+
+    {transaction_level, new_db3} = Kvdb.begin(new_db2)
+    assert transaction_level == 3
+    assert length(new_db3.transactions) == 4
+
+    {transaction_level, new_db4} = Kvdb.begin(new_db3)
+    assert transaction_level == 4
+    assert length(new_db4.transactions) == 5
+  end
 end
