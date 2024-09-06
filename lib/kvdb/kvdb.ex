@@ -41,11 +41,12 @@ defmodule Kvdb do
     - `args`: Lista de strings contendo os argumentos passados na linha de comando. 
             Onde o primeiro argumento é a chave e o segundo é o valor a ser associado com essa chave.
   Retorno: 
-    - `{existe :: boolean, valor :: T}`: 
+    - `{existe :: boolean, valor :: T, new_db :: Kvdb}`: 
       - `existe`: Se a chave existe ou não.
         - `true`: Se a chave existe e foi sobreescrita.
         - `false`: Se a chave não existe.
       - `valor`: O valor associado com a chave. Onde `T` é o tipo do valor armazenado.
+      - `new_db`: Uma nova instancia do nosso banco de dados
   """
   def set(db, key, value) do
     curr_transaction = get_top_transaction(db)
@@ -68,10 +69,10 @@ defmodule Kvdb do
     - `args`: Lista de strings contendo os argumentos passados na linha de comando. 
             Onde o primeiro, e único, argumento é a chave cujo valor será recuperado.
   Retorno: 
-    - `{valor :: T}`: 
+    - `{valor :: T, new_db :: Kvdb}`: 
       - `valor`: O valor associado com a chave. Onde `T` é o tipo do valor armazenado.
+      - `new_db`: Uma nova instancia do nosso banco de dados
   """
-
   def get(db, key) do
     curr_transaction = get_top_transaction(db)
     {Map.get(curr_transaction, key, nil), db}
@@ -86,8 +87,9 @@ defmodule Kvdb do
     - Não recebe parâmetros.
 
   Retorno: 
-    - `nivel_de_transacao :: integer`: 
+    - `{nivel_de_transacao :: integer, new_db :: Kvdb}`: 
       - `nivel_de_transacao`: O nível de transação atual (i.e. quantas transações abertas existem).
+      - `new_db`: Uma nova instancia do nosso banco de dados
   """
   def begin(db) do
     new_db = %Kvdb{transactions: [%{} | db.transactions]}
@@ -104,11 +106,22 @@ defmodule Kvdb do
     - Não recebe parâmetros.
 
   Retorno: 
-    - `nivel_de_transacao :: integer`: 
+    - `{nivel_de_transacao :: integer, new_db :: Kvdb}`: 
       - `nivel_de_transacao`: O nível de transação após o rollback.
+      - `new_db`: Uma nova instancia do banco de dados
   """
   def rollback(db) do
-    raise "Not implemented yet"
+    case db.transactions do
+      [_single_transaction] ->
+        {transaction_level(db), db}
+
+      [_ | remaining_transactions] ->
+        new_db = %Kvdb{transactions: remaining_transactions}
+        {transaction_level(new_db), new_db}
+
+      _ ->
+        {transaction_level(db), db}
+    end
   end
 
   @doc """
@@ -123,8 +136,9 @@ defmodule Kvdb do
     - Não recebe parâmetros.
 
   Retorno: 
-    - `nivel_de_transacao :: integer`: 
+    - `{nivel_de_transacao :: integer, new_db :: Kvdb}`: 
       - `nivel_de_transacao`: O nível de transação após o commit.
+      - `new_db`: Uma nova instancia do banco de dados
   """
   def commit(db) do
     raise "Not implemented yet"

@@ -54,4 +54,29 @@ defmodule KvdbTest do
     assert transaction_level == 4
     assert length(new_db4.transactions) == 5
   end
+
+  test "ROLLBACK command", %{db: db} do
+    assert Kvdb.transaction_level(db) == 0
+
+    {t1, db1} = Kvdb.begin(db)
+    {t2, db2} = Kvdb.begin(db)
+    {t3, db3} = Kvdb.begin(db2)
+    {t4, db4} = Kvdb.begin(db3)
+    assert t4 == 3
+
+    {transaction_level, new_db} = Kvdb.rollback(db4)
+    assert transaction_level == 2
+
+    {transaction_level2, new_db2} = Kvdb.rollback(new_db)
+    assert transaction_level2 == 1
+
+    {transaction_level3,new_db3} = Kvdb.rollback(new_db2)
+    assert transaction_level3 == 0
+
+    # Keep the db state and transaction_level at 0
+    {transaction_level4, new_db4} = Kvdb.rollback(new_db3)
+    assert transaction_level4 == 0
+    assert new_db4 == new_db3
+
+  end
 end

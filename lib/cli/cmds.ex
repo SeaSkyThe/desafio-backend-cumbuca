@@ -52,7 +52,17 @@ defmodule Cli.Cmds do
   end
 
   def rollback(db, []) do
-    raise "Not implemented yet"
+    # Should this check be internal to Kvdb module?
+    case Kvdb.transaction_level(db) do
+      0 ->
+        print_error("You can't ROLLBACK at level 0: No transactions to revert.")
+        :syntax_error
+
+      _ ->
+        {transaction_level, new_db} = Kvdb.rollback(db)
+        IO.puts("#{transaction_level}")
+        new_db
+    end
   end
 
   def rollback(_db, _) do
