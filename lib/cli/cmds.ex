@@ -18,14 +18,20 @@ defmodule Cli.Cmds do
   end
 
   def set(db, [key, value]) when is_binary(key) do
-    {exists, value, new_db} = Kvdb.set(db, key, value)
-    IO.puts("#{if exists, do: "TRUE", else: "FALSE"} #{value}")
-    new_db
+    case value do
+      nil ->
+        print_error("SET <chave> <valor> -> <valor> can't be NIL")
+        db
+
+      _ ->
+        {exists, value, new_db} = Kvdb.set(db, key, value)
+        IO.puts("#{if exists, do: "TRUE", else: "FALSE"} #{value}")
+        new_db
+    end
   end
 
   def set(_db, _) do
     print_error("SET <chave> <valor> - Syntax error")
-
     :syntax_error
   end
 
@@ -55,7 +61,7 @@ defmodule Cli.Cmds do
     # Should this check be internal to Kvdb module?
     case Kvdb.transaction_level(db) do
       0 ->
-        print_error("You can't ROLLBACK at level 0: No transactions to revert.")
+        print_error("You can't ROLLBACK at transaction level 0: No transactions to revert.")
         :syntax_error
 
       _ ->

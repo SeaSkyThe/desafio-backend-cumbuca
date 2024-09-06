@@ -126,9 +126,49 @@ defmodule CliTest do
     here_we_go_again = %Kvdb{transactions: [%{"TRUE" => 1415, "FALSE" => false}]}
     assert Cli.process_input("SET 'FALSE' false", yet_another_db) == here_we_go_again
 
-
     well_well = %Kvdb{transactions: [%{"TRUE" => "changed", "FALSE" => false}]}
     assert Cli.process_input("SET 'TRUE' changed", here_we_go_again) == well_well
+  end
 
+  test "Process Input - SET -> NIL value", %{db: db} do
+    new_db = Cli.process_input("SET 'ola mundo' true", db)
+    new_db2 = Cli.process_input("SET b NIL", new_db)
+    new_db3 = Cli.process_input("SET 'ola mundo' NIL", new_db2)
+
+    assert =
+      new_db2 == %Kvdb{
+        transactions: [%{"ola mundo" => true}]
+      }
+
+    assert =
+      new_db3 == %Kvdb{
+        transactions: [%{"ola mundo" => true}]
+      }
+  end
+
+  test "Process Input - BEGIN -> Success" do
+    db = %Kvdb{transactions: [%{"a" => 2}]}
+
+    new_db = Cli.process_input("BEGIN", db)
+    assert new_db == %Kvdb{transactions: [%{}, %{"a" => 2}]}
+
+    new_db2 = Cli.process_input("BEGIN", new_db)
+    assert new_db2 == %Kvdb{transactions: [%{}, %{}, %{"a" => 2}]}
+
+    new_db3 = Cli.process_input("BEGIN", new_db2)
+    assert new_db3 == %Kvdb{transactions: [%{}, %{}, %{}, %{"a" => 2}]}
+  end
+
+  test "Process Input - ROLLBACK -> Success" do
+    db = %Kvdb{transactions: [%{"a" => 2}, %{"b" => 3}, %{"c" => true}]}
+
+    new_db = Cli.process_input("ROLLBACK", db)
+    assert new_db == %Kvdb{transactions: [%{"b" => 3}, %{"c" => true}]}
+
+    new_db2 = Cli.process_input("ROLLBACK", new_db)
+    assert new_db2 == %Kvdb{transactions: [%{"c" => true}]}
+
+    new_db3 = Cli.process_input("ROLLBACK", new_db2)
+    assert new_db3 == %Kvdb{transactions: [%{"c" => true}]}
   end
 end
