@@ -70,13 +70,33 @@ defmodule KvdbTest do
     {transaction_level2, new_db2} = Kvdb.rollback(new_db)
     assert transaction_level2 == 1
 
-    {transaction_level3,new_db3} = Kvdb.rollback(new_db2)
+    {transaction_level3, new_db3} = Kvdb.rollback(new_db2)
     assert transaction_level3 == 0
 
     # Keep the db state and transaction_level at 0
     {transaction_level4, new_db4} = Kvdb.rollback(new_db3)
     assert transaction_level4 == 0
     assert new_db4 == new_db3
+  end
 
+  test "COMMIT command" do
+    expected_db = %Kvdb{transactions: [%{"a" => 1, "b" => 2, "c" => 3, "d" => 4}]}
+    expected_transaction_level = 0
+
+    db = %Kvdb{
+      transactions: [
+        %{"a" => 1, "b" => 2},
+        %{"b" => "dois", "c" => 3},
+        %{"c" => true},
+        %{"d" => 4}
+      ]
+    }
+
+    {transaction_level1, new_db} = Kvdb.commit(db)
+    {transaction_level2, new_db2} = Kvdb.commit(new_db)
+    {transaction_level3, new_db3} = Kvdb.commit(new_db2)
+
+    assert transaction_level3 == expected_transaction_level
+    assert new_db3 == expected_db
   end
 end

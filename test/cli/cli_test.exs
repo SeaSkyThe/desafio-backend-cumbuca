@@ -171,4 +171,31 @@ defmodule CliTest do
     new_db3 = Cli.process_input("ROLLBACK", new_db2)
     assert new_db3 == %Kvdb{transactions: [%{"c" => true}]}
   end
+
+  test "Process Input - COMMIT -> Success" do
+    db = %Kvdb{
+      transactions: [%{"a" => 2}, %{"b" => 3, "c" => "ola pessoal"}, %{"c" => "NIL", "d" => true}]
+    }
+
+    new_db = Cli.process_input("COMMIT", db)
+
+    assert new_db == %Kvdb{
+             transactions: [
+               %{"a" => 2, "b" => 3, "c" => "ola pessoal"},
+               %{"c" => "NIL", "d" => true}
+             ]
+           }
+
+    new_db2 = Cli.process_input("COMMIT", new_db)
+
+    assert new_db2 == %Kvdb{
+             transactions: [
+               %{"a" => 2, "b" => 3, "c" => "ola pessoal", "d" => true}
+             ]
+           }
+
+    new_db3 = Cli.process_input("COMMIT", new_db2)
+
+    assert new_db3 == new_db2
+  end
 end

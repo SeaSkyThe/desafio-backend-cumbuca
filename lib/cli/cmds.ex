@@ -77,7 +77,19 @@ defmodule Cli.Cmds do
   end
 
   def commit(db, []) do
-    raise "Not implemented yet"
+    case Kvdb.transaction_level(db) do
+      0 ->
+        print_error(
+          "You can't COMMIT at transaction level 0: Your changes were already applied to the database."
+        )
+
+        :syntax_error
+
+      _ ->
+        {transaction_level, new_db} = Kvdb.commit(db)
+        IO.puts("#{transaction_level}")
+        new_db
+    end
   end
 
   def commit(_db, _) do

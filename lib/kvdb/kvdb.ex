@@ -130,7 +130,7 @@ defmodule Kvdb do
   Finaliza a transação atual aplicando todas as suas alterações.
   Isto é, todas as alterações feitas dentro da transação são aplicadas na transação superior.
   Caso após o commit não houver mais transações abertas, o resultado das transacoes, 
-  deven ser efetivados no banco.
+  devem ser efetivados no banco.
 
   Parâmetros:
     - Não recebe parâmetros.
@@ -141,6 +141,17 @@ defmodule Kvdb do
       - `new_db`: Uma nova instancia do banco de dados
   """
   def commit(db) do
-    raise "Not implemented yet"
+    case db.transactions do
+      [_single_transaction] ->
+        {transaction_level(db), db}
+
+      [current_transaction, superior_transaction | remaining_transactions] ->
+        new_superior_transaction = Map.merge(superior_transaction, current_transaction)
+        new_db = %Kvdb{transactions: [new_superior_transaction | remaining_transactions]}
+        {transaction_level(new_db), new_db}
+
+      [_] ->
+        {transaction_level(db), db}
+    end
   end
 end
