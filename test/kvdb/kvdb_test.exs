@@ -58,9 +58,9 @@ defmodule KvdbTest do
   test "ROLLBACK command", %{db: db} do
     assert Kvdb.transaction_level(db) == 0
 
-    {t1, db1} = Kvdb.begin(db)
-    {t2, db2} = Kvdb.begin(db)
-    {t3, db3} = Kvdb.begin(db2)
+    {_, db1} = Kvdb.begin(db)
+    {_, db2} = Kvdb.begin(db)
+    {_, db3} = Kvdb.begin(db2)
     {t4, db4} = Kvdb.begin(db3)
     assert t4 == 3
 

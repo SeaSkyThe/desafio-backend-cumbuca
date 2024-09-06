@@ -61,14 +61,10 @@ defmodule Cli do
     end
   end
 
+  # Minha escolha foi utilizar aspas simples para representar strings
   def parse_command_and_args(input) do
     trimmed_input = String.trim(input)
-    # Regex: Match qualquer grupo de carcateres entre aspas ('...')  (exceto aspas)
-    # ou qualquer caractere que não seja um espaço em branco ('\s')
-    # returns a list of lists (first element of each list holds the match, after that its the captured groups)
-    args_list =
-      Regex.scan(~r/'([^']+)'|[^\s]+/, trimmed_input)
-      |> Enum.map(fn [match | _] -> match end)
+    args_list = parse_args(trimmed_input, [], "", false, false)
 
     [cmd | args] = args_list
 
@@ -98,6 +94,38 @@ defmodule Cli do
       )
 
     {cmd, parsed_args}
+  end
+
+  defp parse_args("", args, current_arg, _inside_quote, _escape) do
+    if current_arg != "" do
+      Enum.reverse([current_arg | args])
+    else
+      args
+    end
+  end
+
+  defp parse_args(<<char::utf8, rest::binary>>, args, current_arg, inside_quote, escape) do
+    case {char, inside_quote, escape} do
+      # Handle escaped sequences
+      {?\\, _, _} ->
+        parse_args(rest, args, current_arg <> <<char::utf8>>, inside_quote, true)
+
+      # Handle non escaped sequences
+      # Handle start of quote
+      {?', false, false} ->
+        parse_args(rest, args, "'", true, false)
+
+      # Handle end of quote
+      {?', true, false} ->
+        parse_args(rest, args, current_arg <> "'", false, false)
+
+      # Handle whitespace (end of argument)
+      {chr, false, false} when chr in [?\s, ?\t, ?\n] ->
+        parse_args(rest, [current_arg | args], "", inside_quote, false)
+
+      _ ->
+        parse_args(rest, args, current_arg <> <<char::utf8>>, inside_quote, false)
+    end
   end
 
   defp handle_command_result(:syntax_error, db), do: db
