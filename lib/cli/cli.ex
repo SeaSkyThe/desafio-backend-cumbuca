@@ -2,12 +2,6 @@ defmodule Cli do
   @moduledoc """
   Módulo responsável por processar os argumentos passados na CLI.
   """
-
-  @doc """
-  A função main recebe os argumentos passados na linha de
-  comando como lista de strings e executa a CLI.
-  """
-
   def start() do
     db = Kvdb.new()
     IO.puts("\nWelcome to Cumbuca KEY-VALUE Store!\n")
@@ -86,8 +80,11 @@ defmodule Cli do
 
             _ ->
               case Integer.parse(arg) do
-                {int_value, _} -> int_value
-                _ -> String.trim(arg, "'")
+                {int_value, _} ->
+                  int_value
+
+                _ ->
+                  remove_surrounding_quotes(arg)
               end
           end
         end
@@ -100,15 +97,19 @@ defmodule Cli do
     if current_arg != "" do
       Enum.reverse([current_arg | args])
     else
-      args
+      Enum.reverse(args)
     end
   end
 
   defp parse_args(<<char::utf8, rest::binary>>, args, current_arg, inside_quote, escape) do
     case {char, inside_quote, escape} do
-      # Handle escaped sequences
-      {?\\, _, _} ->
-        parse_args(rest, args, current_arg <> <<char::utf8>>, inside_quote, true)
+      # Handle escaped sequences inside quotes
+      {?\\, true, false} ->
+        parse_args(rest, args, current_arg, inside_quote, true)
+
+      # Handle escaped characters
+      {chr, _, true} ->
+        parse_args(rest, args, current_arg <> <<chr::utf8>>, inside_quote, false)
 
       # Handle non escaped sequences
       # Handle start of quote
@@ -125,6 +126,27 @@ defmodule Cli do
 
       _ ->
         parse_args(rest, args, current_arg <> <<char::utf8>>, inside_quote, false)
+    end
+  end
+
+  defp remove_surrounding_quotes(str) do
+    case String.length(str) do
+      0 ->
+        ""
+
+      1 ->
+        str
+
+      _ ->
+        first = String.first(str)
+        last = String.last(str)
+
+        case {first, last} do
+          {"'", "'"} -> String.slice(str, 1..-2//1)
+          {"'", _} -> String.slice(str, 1..-1//1)
+          {_, "'"} -> String.slice(str, 0..-2//1)
+          _ -> str
+        end
     end
   end
 

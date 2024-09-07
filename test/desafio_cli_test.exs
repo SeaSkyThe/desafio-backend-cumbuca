@@ -103,27 +103,50 @@ defmodule DesafioCliTest do
       "BEGIN",
       "SET a 'O valor de \"a\" mudou no nivel 1'",
       "SET b 123",
-      "COMMIT"
+      "SET c 'MULTI PALAVRAS'",
+      "COMMIT",
+      "SET 'minha variavel' '\\\'a\\\''",
+      "SET d 'NIL'",
+      "SET e 'TRUE'",
+      "SET f 'FALSE'",
+      "SET g '12345'",
+      "GET e",
+      "GET g",
+      "ROLLBACK"
     ]
 
     original_db = Kvdb.new()
 
     expected_outputs = [
-      "FALSE \"Valor\" da variavel",
-      "FALSE false",
-      "FALSE true",
+      "FALSE '\"Valor\" da variavel'",
+      "FALSE FALSE",
+      "FALSE TRUE",
       "1",
-      "FALSE O valor de \"a\" mudou no nivel 1",
+      "FALSE 'O valor de \"a\" mudou no nivel 1'",
       "FALSE 123",
-      "0"
+      "FALSE 'MULTI PALAVRAS'",
+      "0",
+      "TRUE 'a'",
+      "FALSE 'NIL'",
+      "FALSE 'TRUE'",
+      "FALSE 'FALSE'",
+      "FALSE '12345'",
+      "'TRUE'",
+      "'12345'",
+      "ERR \"You can't ROLLBACK at transaction level 0: No transactions to revert.\""
     ]
 
     expected_db = %Kvdb{
       transactions: [
         %{
-          "minha variavel" => "\"Valor\" da variavel", 
+          "minha variavel" => "'a'",
           "a" => "O valor de \"a\" mudou no nivel 1",
           "b" => 123,
+          "c" => "MULTI PALAVRAS",
+          "d" => "NIL",
+          "e" => "TRUE",
+          "f" => "FALSE",
+          "g" => "12345"
         }
       ]
     }

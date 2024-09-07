@@ -6,7 +6,6 @@ defmodule Kvdb do
 
   defstruct transactions: []
 
-  # Quanto mais à esquerda da lista, mais alto é o nível da transação
   def new() do
     %Kvdb{transactions: [%{}]}
   end
@@ -21,7 +20,7 @@ defmodule Kvdb do
   end
 
   def update_top_transaction(db, new_transaction) do
-    # Personal Reminder: the update syntax is confusing 
+    # Personal Remainder: the update syntax is confusing 
     # It would be the same as: %Kvdb{transactions: [new_transaction | old_transactions]} 
     case db.transactions do
       [_ | old_transactions] ->

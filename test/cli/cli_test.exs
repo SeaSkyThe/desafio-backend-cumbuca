@@ -77,7 +77,7 @@ defmodule CliTest do
 
   test "Parse Commands with Escaped Simple Quotes" do
     assert Cli.parse_command_and_args("SET 'ola meus \\\'queridos\\\' blz?' 'sim \\\' tudo certo'") ==
-             {"SET", ["ola meus \\\'queridos\\\' blz?", "sim \\\' tudo certo"]}
+             {"SET", ["ola meus 'queridos' blz?", "sim ' tudo certo"]}
   end
 
   # Argument processing

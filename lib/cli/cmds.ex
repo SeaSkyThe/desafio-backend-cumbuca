@@ -3,9 +3,6 @@ defmodule Cli.Cmds do
   Módulo responsável por definir os comandos disponíveis na CLI e tratá-los.
   """
 
-  @doc """
-  Função que imprime a mensagem de ajuda.
-  """
   def help() do
     IO.puts("Comandos disponíveis:")
     IO.puts("  HELP - Mostra este menu")
@@ -25,7 +22,8 @@ defmodule Cli.Cmds do
 
       _ ->
         {exists, value, new_db} = Kvdb.set(db, key, value)
-        IO.puts("#{if exists, do: "TRUE", else: "FALSE"} #{value}")
+        IO.write("#{if exists, do: "TRUE", else: "FALSE"} ")
+        print_return_value(value)
         new_db
     end
   end
@@ -37,7 +35,7 @@ defmodule Cli.Cmds do
 
   def get(db, [key]) when is_binary(key) do
     {value, new_db} = Kvdb.get(db, key)
-    IO.puts("#{if value == nil, do: "NIL", else: value}")
+    print_return_value(value)
     new_db
   end
 
@@ -58,7 +56,6 @@ defmodule Cli.Cmds do
   end
 
   def rollback(db, []) do
-    # Should this check be internal to Kvdb module?
     case Kvdb.transaction_level(db) do
       0 ->
         print_error("You can't ROLLBACK at transaction level 0: No transactions to revert.")
@@ -102,5 +99,43 @@ defmodule Cli.Cmds do
   """
   def print_error(err) do
     IO.puts("ERR \"#{err}\"")
+  end
+
+  defp print_return_value(value) do
+    case value do
+      nil ->
+        IO.puts("NIL")
+
+      true ->
+        IO.puts("TRUE")
+
+      false ->
+        IO.puts("FALSE")
+
+      "TRUE" ->
+        IO.puts("'TRUE'")
+
+      "FALSE" ->
+        IO.puts("'FALSE'")
+
+      "NIL" ->
+        IO.puts("'NIL'")
+
+      _ when is_binary(value) ->
+        case Integer.parse(value, 10) do
+          {int_value, ""} ->
+            IO.puts("'#{int_value}'")
+
+          _ ->
+            if String.contains?(value, " ") do
+              IO.puts("'#{value}'")
+            else
+              IO.puts(value)
+            end
+        end
+
+      _ ->
+        IO.puts(value)
+    end
   end
 end
