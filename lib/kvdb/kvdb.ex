@@ -4,10 +4,14 @@ defmodule Kvdb do
   Kvdb = Key-Value Database
   """
 
-  defstruct transactions: []
+  defstruct transactions: [], filename: nil
 
-  def new() do
-    %Kvdb{transactions: [%{}]}
+  def new(filename \\ nil, load \\ false) do
+    if load && filename do
+      load_state(filename)
+    else
+      %Kvdb{transactions: [%{}], filename: filename}
+    end
   end
 
   def get_top_transaction(db) do
@@ -55,6 +59,8 @@ defmodule Kvdb do
 
     new_db = update_top_transaction(db, updated_transaction)
 
+    save_state(new_db)
+
     {has_key, value, new_db}
   end
 
@@ -91,7 +97,7 @@ defmodule Kvdb do
       - `new_db`: Uma nova instancia do nosso banco de dados
   """
   def begin(db) do
-    new_db = %Kvdb{transactions: [%{} | db.transactions]}
+    new_db = %{db | transactions: [%{} | db.transactions]}
     {transaction_level(new_db), new_db}
   end
 
@@ -115,7 +121,7 @@ defmodule Kvdb do
         {transaction_level(db), db}
 
       [_ | remaining_transactions] ->
-        new_db = %Kvdb{transactions: remaining_transactions}
+        new_db = %{db | transactions: remaining_transactions}
         {transaction_level(new_db), new_db}
 
       _ ->
@@ -146,11 +152,98 @@ defmodule Kvdb do
 
       [current_transaction, superior_transaction | remaining_transactions] ->
         new_superior_transaction = Map.merge(superior_transaction, current_transaction)
-        new_db = %Kvdb{transactions: [new_superior_transaction | remaining_transactions]}
+        new_db = %{db | transactions: [new_superior_transaction | remaining_transactions]}
+        save_state(new_db)
         {transaction_level(new_db), new_db}
-
-      [_] ->
-        {transaction_level(db), db}
     end
   end
+
+  defp save_state(db) do
+    if transaction_level(db) == 0 do
+      case db.filename do
+        nil ->
+          :ok
+
+        _ ->
+          persistence_file = db.filename
+          level_0_transaction = List.last(db.transactions)
+
+          data_to_save = Map.to_list(level_0_transaction)
+
+          case File.open(persistence_file, [:write]) do
+            {:ok, file} ->
+              try do
+                Enum.each(
+                  data_to_save,
+                  fn {key, value} ->
+                    key_len = String.length(key)
+
+                    case value do
+                      value when is_integer(value) ->
+                        IO.write(file, "#{key_len} #{key} #{value} int\n")
+
+                      value when is_boolean(value) ->
+                        IO.write(file, "#{key_len} #{key} #{value} bool\n")
+
+                      _ ->
+                        IO.write(file, "#{key_len} #{key} #{value} str\n")
+                    end
+                  end
+                )
+
+                :ok
+              after
+                :file.close(file)
+              end
+
+            {:error, reason} ->
+              {:error, reason}
+          end
+      end
+    else
+      :ok
+    end
+  end
+
+  defp load_state(filename) do
+    case File.read(filename) do
+      {:ok, text} ->
+        values = String.split(text, "\n", trim: true)
+
+        # {_, values} = List.pop_at(values_with_last, -1)
+
+        level_0_transaction =
+          Enum.reduce(values, %{}, fn line, acc ->
+            {key, value, type} = parse_line(line)
+            Map.put(acc, key, cast_value(value, type))
+          end)
+
+        %Kvdb{transactions: [level_0_transaction], filename: filename}
+
+      {:error, _reason} ->
+        %Kvdb{transactions: [%{}], filename: filename}
+    end
+  end
+
+  defp parse_line(line) do
+    [key_size_str | rest] = String.split(line, " ", parts: 2, trim: true)
+
+    rest = List.first(rest)
+
+    key_size = String.to_integer(key_size_str)
+    key = String.slice(rest, 0..(key_size - 1))
+
+    value_and_type_string = String.slice(rest, key_size..-1//1)
+    value_and_type = String.split(value_and_type_string, " ", trim: true)
+
+    type = List.last(value_and_type)
+    value = Enum.slice(value_and_type, 0..(length(value_and_type) - 2)) |> Enum.join(" ")
+
+    {key, value, type}
+  end
+
+  defp cast_value(value, "int"), do: String.to_integer(value)
+  defp cast_value("true", "bool"), do: true
+  defp cast_value("false", "bool"), do: false
+  defp cast_value(value, "str"), do: value
 end

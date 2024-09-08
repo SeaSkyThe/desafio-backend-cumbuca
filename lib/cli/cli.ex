@@ -3,7 +3,7 @@ defmodule Cli do
   Módulo responsável por processar os argumentos passados na CLI.
   """
   def start() do
-    db = Kvdb.new()
+    db = Kvdb.new("kvdb.data", true)
     IO.puts("\nWelcome to Cumbuca KEY-VALUE Store!\n")
     IO.puts("Type 'help' to see the list of available commands.")
     loop(db)
