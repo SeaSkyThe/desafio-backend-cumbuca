@@ -46,7 +46,6 @@ defmodule Cli do
         handle_command_result(Cli.Cmds.commit(db, args), db)
 
       "EXIT" ->
-        # Maybe we should save the db state here? 
         System.halt(0)
 
       _ ->
@@ -55,7 +54,7 @@ defmodule Cli do
     end
   end
 
-  # Minha escolha foi utilizar aspas simples para representar strings
+  # Im using simple quotes to represent strings
   def parse_command_and_args(input) do
     trimmed_input = String.trim(input)
     args_list = parse_args(trimmed_input, [], "", false, false)

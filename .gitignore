@@ -26,3 +26,6 @@ desafio_cli-*.tar
 /tmp/
 
 .formatter.exs
+
+desafio_cli
+kvdb.data

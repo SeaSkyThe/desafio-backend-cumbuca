@@ -24,8 +24,6 @@ defmodule Kvdb do
   end
 
   def update_top_transaction(db, new_transaction) do
-    # Personal Remainder: the update syntax is confusing 
-    # It would be the same as: %Kvdb{transactions: [new_transaction | old_transactions]} 
     case db.transactions do
       [_ | old_transactions] ->
         %{db | transactions: [new_transaction | old_transactions]}
@@ -209,8 +207,6 @@ defmodule Kvdb do
     case File.read(filename) do
       {:ok, text} ->
         values = String.split(text, "\n", trim: true)
-
-        # {_, values} = List.pop_at(values_with_last, -1)
 
         level_0_transaction =
           Enum.reduce(values, %{}, fn line, acc ->
